@@ -1,24 +1,41 @@
-# Script developed for the peer-reviewed assignment in course: Getting and Cleaning Data
+# Script developed for the peer-reviewed assignment for course: 
+# Getting and Cleaning Data from Coursera
+#
+# Author: M.H. (Aug. 2016)
+#
+# ====================================================================
+# To run just type
+# source("run_analysis.R")
+#
+# Script assumes that the following files are in the working directory
+# - features.txt
+# - X_test.txt
+# - y_test.txt
+# - subject_train.txt
+# - X_train.txt
+# - y_train.txt
+# - subject_test.txt
+#
+# Script produces one data file called "tidydata.txt"
 #
 #
-#
-#
+
 
 # Import dplyr
 library(dplyr)
 
 # --- Collect data from the train set. ---
 # - Read the subject id from file subject_train.txt
-subjtrainoriginal <- read.table("UCI HAR Dataset/train/subject_train.txt",col.names = "subjectid")
+subjtrainoriginal <- read.table("subject_train.txt",col.names = "subjectid")
 
 # - Read the the activity file
-ytrain <- read.table("UCI HAR Dataset/train/y_train.txt",col.names = "activity")
+ytrain <- read.table("y_train.txt",col.names = "activity")
 
 # - Read the data with the measurements
-Xtrain <- read.table("UCI HAR Dataset/train/X_train.txt")
+Xtrain <- read.table("X_train.txt")
 
 # - Read the features from file "features.txt"
-features <- read.table("UCI HAR Dataset/features.txt")
+features <- read.table("features.txt")
 # - Determine the columns of the data set feature that correspond to names including
 # the term "mean" and "std"
 meanstdcol <- which(grepl("mean|std",features$V2))
@@ -45,15 +62,15 @@ subjactivtrain <- mutate(subjtrainoriginal,"subjectset"="training","activity"=ac
 # - Combine Xmeanstdcol and subjactivtrain into one singe data set called cleantrain
 cleantrain <- cbind(subjactivtrain,Xmeanstdcoltrain)
 
-# ===== Repeat the same procedure for the data in folder test =====
-# --- Collect data from the train set. ---
+# ===== Repeat the same procedure for the test set =====
+# --- Collect data from the test set. ---
 
 # - Read the subject id from file subject_test.txt
-subjtestoriginal <- read.table("UCI HAR Dataset/test/subject_test.txt",col.names = "subjectid")
+subjtestoriginal <- read.table("subject_test.txt",col.names = "subjectid")
 # - Read the the activity file
-ytest <- read.table("UCI HAR Dataset/test/y_test.txt",col.names = "activity")
+ytest <- read.table("y_test.txt",col.names = "activity")
 # - Read the data with the measurements
-Xtest <- read.table("UCI HAR Dataset/test/X_test.txt")
+Xtest <- read.table("X_test.txt")
 # - Subset the Xtest data set using the columns from meanstdcol
 Xmeanstdcoltest <- Xtest[,meanstdcol]
 # - change the names of the columns using the vector featuresvarnames
@@ -75,8 +92,13 @@ cleanexperimentdata <- rbind(cleantrain,cleantest)
 # === Create a new data set with mean values of all measurements for each activity
 # and subject
 
+# Subsett cleanexperimentdata excluding variable "subjectset"
 x <- cleanexperimentdata[,c("subjectid","activity",featuresvarnames)]
+
+# Melt data organized by variable with features
 xmelt <- melt(x,id=c("subjectid","activity"),measure.vars = featuresvarnames)
+
+# Calulate the mean of the data in xmelt
 tidydata <- dcast(xmelt,activity + subjectid ~ variable, mean)
 
 # === Export the tidy data set as a text file
